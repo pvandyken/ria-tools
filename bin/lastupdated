@@ -1,18 +1,18 @@
 #!/bin/bash
-#
-# Print the timestamp and user ID of the last dataset update
-#
-# When called any standard dataset argument, reports information
-# for that single dataset.
-#
-# When called with the location of an entire HAMMERPANTS store,
-# reports this information for all datasets in it. Each line
-# additionally reports the path to the dataset in the store,
-# in this case
-#
+
 set -e -u
 
-source hammerpants_dsinfo
+HELP_TXT=$(cat <<EOF
+Print the timestamp and user ID of the last dataset update
+
+When called any standard dataset argument, reports information for that single dataset.
+
+When called with the location of an entire datastore, reports this information for all
+datasets in it. Each line additionally reports the path to the dataset in the store
+EOF
+)
+
+source dsinfo
 # if no HAMMERPANTS location was determined, use argument
 hp=${hp_path:-$1}
 

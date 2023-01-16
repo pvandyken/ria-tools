@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -e -u
+
+# Get dir of the script
+get_dir () {
+  local SOURCE=${BASH_SOURCE[0]}
+  while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    local DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+    local SOURCE=$(readlink "$SOURCE")
+    [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  local DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  echo $DIR
+}
+
+bin=$(get_dir)
+lib=$(dirname $bin)/ria_tools/lib
+
+COMMAND="$1"
+case "$1" in
+  help | --help | -h)
+    cat <<EOF
+USAGE: riatools [subcommand] [args]
+Tools for interacting with ria dataset storage
+
+archive - Move storage objects into a 7z archive
+gc - Dataset garbage collection
+deps - List the subdatasets of a given dataset
+EOF
+    ;;
+
+  archive)
+    shift
+    $bin/archiveobjs "$@"
+    ;;
+
+  gc)
+    shift
+    if [ "$1" -eq "--all" ]; then
+      shift
+      $bin/gc_all "$@"
+    else
+      $bin/gc "$@"
+    fi
+    ;;
+
+  deps)
+    shift
+    $bin/dsdeps "$@"
+    ;;
+
+  *)
+    echo "Unrecognized command $1" > /dev/stderr
+    exit 1
+esac
+
+

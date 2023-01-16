@@ -2,9 +2,15 @@
 
 set -e -u
 
+HELP_TXT=$(cat <<EOF
+Clean up and minimize all datasets in a datastore
+EOF
+)
+
+
 find "$1" \
     -mindepth 3 -maxdepth 3 \
     -name objects \
     -type d \
     -print \
-    -execdir hammerpants_gc \;
+    -execdir $bin/gc \;

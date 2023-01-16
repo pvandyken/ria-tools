@@ -1,14 +1,16 @@
 #!/bin/bash
-#
-# Prints dataset IDs for each subdataset recorded in a dataset
-# 
-# Subdataset not available in the same HAMMERPANTS are reported
-# via stderr and result in a non-zero exit code
-#
+
 set -e -u
 
-# from PATH, need not be executable
-source hammerpants_dsinfo
+HELP_TXT=$(cat <<EOF
+Print dataset IDs for each subdataset recorded in a dataset
+
+Subdataset not available in the same datastore are reported via stderr and result in a
+non-zero exit code.
+EOF
+)
+
+source $lib/dsinfo
 
 error=0
 for dep in $($git_ds cat-file -p HEAD:.gitmodules | grep '^\sdatalad-id' | cut -d= -f2); do

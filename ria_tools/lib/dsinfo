@@ -1,0 +1,92 @@
+#!/bin/bash
+#
+# Little helper to parse args
+#
+
+set -e -u
+
+# convert dataset relpath within HAMMERPANTS to a dataset ID
+function relpath2id () {
+  hp="${2:-}"
+  echo "$(echo ${1:$(expr length "$hp")} | tr -d '/')"
+}
+
+# convert dataset ID to relpath within HAMMERPANTS
+function id2relpath () {
+  echo "${1:0:3}/${1:3}"
+}
+
+function printHelp () {
+  if [[ -z "${SUBCOMMANDS:-}" ]]; then
+    local subcommands=
+    local _help="$HELP_TXT\n\n$SUBCOMMANDS"
+  else
+    local subcommands="[subcommand]"
+  fi
+  cat <<EOF
+USAGE: riatools $COMMAND $subcommands [PATH [ID]]
+
+$_help
+
+If no arguments passed, the current directory must be a valid ria dataset (containing
+a ria-layout-version file)
+
+PATH - if no ID, the path to a valid ria dataset. If ID, the path to a ria datastore
+ID - SHA-1 key of a ria dataset within the passed ria datastore
+EOF
+}
+
+function length () {
+  echo $1 | wc -w
+}
+
+function get () {
+  echo $2 | cut -d' ' -f$1
+}
+
+while [[ -n "${1:-}" && ! "$1" == "--" ]]; do case "$1" in
+  -h | --help )
+    printHelp
+    exit 0
+    ;;
+  -* | --* )
+    echo "Error: Unsupported flag $1" >&2
+    exit 1
+    ;;
+  * )
+    params="$params $1"
+    ;;
+esac; shift; done
+if [[ "${1:-}" == '--' ]]; then shift; fi
+params="$params ${*}"
+
+if [ $(length "$params") = 2 ]; then
+  hp_path="$(readlink -v -f $(get 1 "$params"))"
+  ds_path="$hp_path/$(id2relpath $(get 2 "$params"))"
+elif [ $(length "$params") = 1 ]; then
+  arg=$(get 1 "$params")
+  hp_path="$(readlink -v -f "$arg/../..")"
+  ds_path="$(readlink -v -f "$arg")"
+elif [ -e ria-layout-version ]; then
+  hp_path="$(readlink -v -f ../..)"
+  ds_path="$(readlink -v -f .)"
+else
+  echo "Error: Invalid args '$(echo "$params" | trim | cut -f2- -d' ')'" >&2
+  exit 1
+fi
+ 
+ds_id="$(relpath2id "$ds_path" "$hp_path")"
+if [ "$(expr length "$ds_id")" != 36 ]; then
+  >&2 echo "Not a HAMMERPANTS dataset location"
+  hp_path=
+  ds_path=
+  ds_id=
+else
+  git_ds="git --git-dir $ds_path"
+fi
+
+if [ "$(basename $0)" = "hammerpants_dsinfo" ]; then
+  echo "HAMMERPANTS: $hp_path"
+  echo "DATASET:     $ds_path"
+  echo "DATASET_ID:  $ds_id"
+fi

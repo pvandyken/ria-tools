@@ -1,12 +1,16 @@
 #!/bin/bash
-# 
-# Copy or Move annex objects into a 7z archive, accessible by ria-remote
-#
-# Usage: hammerpants_archiveobjs copy|move <dataset args>
-#
 
-# !!! this next one is IMPORTANT, it protects against 'rm -rf'
-set -e -u -x
+set -e -u
+
+HELP_TXT=$(cat <<EOF
+Copy or move annex objects into a 7z archive, accessible by ria-remote
+EOF
+)
+SUBCOMMANDS=$(cat <<EOF
+move - move objects into the 7z archive
+copy - copy objects int to the archive, without deleting the originals
+EOF
+)
 
 if [ "$1" = "move" ]; then
   move=1
@@ -20,7 +24,7 @@ fi
 shift
 
 # from PATH, need not be executable
-source hammerpants_dsinfo
+source $lib/dsinfo
 
 # uncompressed archive by default
 sevenzopts=${HP_ZIPOPTS:--mx0}

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e -u
+
+HELP_TXT=$(cat <<EOF
+Print the number of commits in the master branch of a dataset
+
+When called any standard dataset argument, reports information for that single dataset.
+
+When called with the location of an entire datastore, reports this information for all
+datasets in it. Each line additionally reports the path to the dataset in the store
+EOF
+)
+
+source $lib/dsinfo
+# if no HAMMERPANTS location was determined, use argument
+hp=${hp_path:-$1}
+
+if [ -n "${git_ds:-}" ]; then
+  $git_ds rev-list --count master
+else
+  find "$1" \
+    -mindepth 3 -maxdepth 3 \
+    -name objects \
+    -type d \
+    -execdir bash -c 'printf "$(git rev-list --count master)\t$(readlink -f .)\n"' \;
+fi

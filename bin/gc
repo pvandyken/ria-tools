@@ -1,10 +1,13 @@
 #!/bin/bash
-#
-# Clean-up and minimize a dataset
-#
+
 set -e -u
 
-source hammerpants_dsinfo
+HELP_TXT=$(cat <<EOF
+Clean up and minimize a dataset
+EOF
+)
+
+source $lib/dsinfo
 
 # all local operations
 cd $ds_path
