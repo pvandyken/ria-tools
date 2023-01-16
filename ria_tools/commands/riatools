@@ -14,11 +14,11 @@ get_dir () {
   echo $DIR
 }
 
-bin=$(get_dir)
-lib=$(dirname $bin)/ria_tools/lib
+export bin=$(get_dir)
+export lib=$(dirname $bin)/lib
 
-COMMAND="$1"
-case "$1" in
+export COMMAND="${1:-}"
+case "${1:-help}" in
   help | --help | -h)
     cat <<EOF
 USAGE: riatools [subcommand] [args]
@@ -37,7 +37,7 @@ EOF
 
   gc)
     shift
-    if [ "$1" -eq "--all" ]; then
+    if [ "$1" = "--all" ]; then
       shift
       $bin/gc_all "$@"
     else

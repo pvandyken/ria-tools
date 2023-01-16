@@ -11,7 +11,7 @@ packages = [{include = "ria_tools"}]
 python = ">=2"
 
 [tool.poetry.scripts]
-riatools = { reference = "bin/ria-tools", type="file" }
+riatools = "ria_tools.main:main"
 
 [build-system]
 requires = ["poetry-core", "poetry-dynamic-versioning"]
