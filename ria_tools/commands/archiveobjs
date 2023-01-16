@@ -8,7 +8,7 @@ EOF
 )
 SUBCOMMANDS=$(cat <<EOF
 move - move objects into the 7z archive
-copy - copy objects int to the archive, without deleting the originals
+copy - copy objects into to the archive, without deleting the originals
 EOF
 )
 
