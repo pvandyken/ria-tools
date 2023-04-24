@@ -127,9 +127,7 @@ set_active_ds () {
 }
 
 try_set_active_ds () {
-  set +e
-  set_active_ds $(parse_args "$@") 2>/dev/null
-  set -e
+  set_active_ds "$@" || true
 }
 
 is_active () {

@@ -11,7 +11,8 @@ When called with the location of an entire datastore, reports this information f
 datasets in it. Each line additionally reports the path to the dataset in the store
 EOF
 )
-try_set_active_ds "$@"
+args=$(parse_args "$@")
+try_set_active_ds "$args"
 
 
 if is_active; then

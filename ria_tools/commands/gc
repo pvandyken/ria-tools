@@ -7,8 +7,19 @@ Clean up and minimize a dataset
 EOF
 )
 
-set_active_ds $(parse_args "$@")
+args=$(parse_args "$@")
+try_set_active_ds "$args"
 
+
+if ! is_active; then
+  find "$1" \
+      -mindepth 3 -maxdepth 3 \
+      -name objects \
+      -type d \
+      -print \
+      -execdir $bin/gc \;
+  exit 0
+fi
 
 # all local operations
 pushd $(get_active_ds path)

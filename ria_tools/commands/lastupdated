@@ -12,7 +12,8 @@ datasets in it. Each line additionally reports the path to the dataset in the st
 EOF
 )
 
-try_set_active_ds "$@"
+args=$(parse_args "$@")
+try_set_active_ds "$args"
 
 if is_active; then
   git_ds rev-list HEAD -n 1 --format="format:%aI %aE" | tail -n1

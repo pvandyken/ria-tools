@@ -54,13 +54,16 @@ if [ $move = 1 ]; then
   objpath="$objpath"_
 fi
 
-cd "$objpath"
+pushd "$objpath"
 # always update, also works from scratch
+chmod +w "$archivepath"/archive.7z
 7z u "$archivepath/archive.7z" . $sevenzopts
 chown -R --reference "$objpath" "$archivepath"/archive.7z
-cd -
+chmod -w "$archivepath"/archive.7z
+popd
 
 if [ $move = 1 ]; then
+  chmod -R +w "$objpath"
   rm -rf "$objpath"
-  rmdir --ignore-fail-on-non-empty "$ds_path/annex"
+  rmdir --ignore-fail-on-non-empty "$(get_active_ds path)/annex"
 fi
