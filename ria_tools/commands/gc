@@ -1,16 +1,17 @@
 #!/bin/bash
-
-set -e -u
+set -Eeu
+source $lib/dsinfo
 
 HELP_TXT=$(cat <<EOF
 Clean up and minimize a dataset
 EOF
 )
 
-source $lib/dsinfo
+set_active_ds $(parse_args "$@")
+
 
 # all local operations
-cd $ds_path
+pushd $(get_active_ds path)
 
 # run garbage collection
 git gc --aggressive
@@ -30,3 +31,4 @@ fi
 # delete template "unnamed" repo description
 [ "$(cat description 2>/dev/null | cut -d ";" -f1,1)"x = "Unnamed repository"x ] && rm description || true
 
+popd

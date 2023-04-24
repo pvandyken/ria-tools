@@ -1,7 +1,7 @@
 #!/bin/bash
+set -Eeu
 
-set -e -u
-
+source $lib/dsinfo
 HELP_TXT=$(cat <<EOF
 Print the number of commits in the master branch of a dataset
 
@@ -11,13 +11,11 @@ When called with the location of an entire datastore, reports this information f
 datasets in it. Each line additionally reports the path to the dataset in the store
 EOF
 )
+try_set_active_ds "$@"
 
-source $lib/dsinfo
-# if no HAMMERPANTS location was determined, use argument
-hp=${hp_path:-$1}
 
-if [ -n "${git_ds:-}" ]; then
-  $git_ds rev-list --count master
+if is_active; then
+  git_ds rev-list --count master
 else
   find "$1" \
     -mindepth 3 -maxdepth 3 \

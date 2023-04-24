@@ -1,7 +1,7 @@
 #!/bin/bash
+set -Eeu
 
-set -e -u
-
+source $lib/dsinfo
 HELP_TXT=$(cat <<EOF
 Print the timestamp and user ID of the last dataset update
 
@@ -12,14 +12,12 @@ datasets in it. Each line additionally reports the path to the dataset in the st
 EOF
 )
 
-source dsinfo
-# if no HAMMERPANTS location was determined, use argument
-hp=${hp_path:-$1}
+try_set_active_ds "$@"
 
-if [ -n "${git_ds:-}" ]; then
-  $git_ds rev-list HEAD -n 1 --format="format:%aI %aE" | tail -n1
+if is_active; then
+  git_ds rev-list HEAD -n 1 --format="format:%aI %aE" | tail -n1
 else
-  find "$hp" \
+  find "$1" \
       -mindepth 3 -maxdepth 3 \
       -name objects \
       -type d \

@@ -3,12 +3,13 @@
 # Little helper to parse args
 #
 
-set -e -u
+set -eEu
+trap '[ "$?" -ne 77 ] || exit 0' ERR
 
 # convert dataset relpath within HAMMERPANTS to a dataset ID
 function relpath2id () {
-  hp="${2:-}"
-  echo "$(echo ${1:$(expr length "$hp")} | tr -d '/')"
+  local base="${1:-}"
+  echo "$(echo ${2:$(expr length "$base")} | tr -d '/')"
 }
 
 # convert dataset ID to relpath within HAMMERPANTS
@@ -37,7 +38,7 @@ $subcmd_help
 EOF
     )
   fi
-  cat <<EOF
+  >&2 cat <<EOF
 USAGE: riatools $COMMAND $subcommands [PATH [ID]]
 
 $_help
@@ -60,49 +61,113 @@ function get () {
   echo $2 | cut -d' ' -f$1
 }
 
-params=
-while [[ -n "${1:-}" && ! "$1" == "--" ]]; do case "$1" in
-  -h | --help )
-    printHelp
-    exit 0
-    ;;
-  -* | --* )
+parse_args () {
+  local params=
+  err () {
     echo "Error: Unsupported flag $1" >&2
     exit 1
-    ;;
-  * )
-    params="$params $1"
-    ;;
-esac; shift; done
-if [[ "${1:-}" == '--' ]]; then shift; fi
-params="$params ${*}"
-
-if [ $(length "$params") = 2 ]; then
-  hp_path="$(readlink -v -f $(get 1 "$params"))"
-  ds_path="$hp_path/$(id2relpath $(get 2 "$params"))"
-elif [ $(length "$params") = 1 ]; then
-  arg=$(get 1 "$params")
-  hp_path="$(readlink -v -f "$arg/../..")"
-  ds_path="$(readlink -v -f "$arg")"
-elif [ -e ria-layout-version ]; then
-  hp_path="$(readlink -v -f ../..)"
-  ds_path="$(readlink -v -f .)"
-else
-  echo "Error: Invalid args '$(echo "$params" | trim | cut -f2- -d' ')'" >&2
-  exit 1
-fi
+  }
+  while [[ -n "${1:-}" && ! "$1" == "--" ]]; do
+    case "$1" in
+      -h | --help )
+        printHelp
+        exit 77
+        ;;
+      -* | --* )
+        ${PARSER:-err}
+        ;;
+      * )
+        params="$params $1"
+        ;;
+    esac;
+    shift;
+  done
+  if [[ "${1:-}" == '--' ]]; then shift; fi
+  params="$params ${*}"
+  echo "$params"
+}
  
-ds_id="$(relpath2id "$ds_path" "$hp_path")"
-if [ "$(expr length "$ds_id")" != 36 ]; then
-  >&2 echo "Not a ria dataset location"
-  hp_path=
-  ds_path=
-  ds_id=
-  exit 1
-else
-  git_ds="git --git-dir $ds_path"
-fi
+ACTIVE_DS_BASE=
+ACTIVE_DS_ID=
+ACTIVE_DS_PATH=
+ACTIVE_DS=
+set_active_ds () {
+  local arg base id
+  check_arg () {
+    if [[ ! -e "$1" ]]; then
+      >&2 echo "Directory does not exist: '$1'"
+      return 1
+    fi
+  }
+  if [ $(length "$@") = 2 ]; then
+    arg=$(get 1 "$@")
+    check_arg "$arg" || return 1
+    base="$(readlink -v -f $arg)"
+    id="$(get 2 "$@"))"
+  elif [ $(length "$@") = 1 ]; then
+    arg=$(get 1 "$@")
+    check_arg "$arg" || return 1
+    base="$(readlink -v -f "$arg/../..")"
+    id="$(relpath2id $base $(readlink -v -f "$arg") )"
+  elif [ -e ria-layout-version ]; then
+    base="$(readlink -v -f ../..)"
+    id="$(relpath2id $base $(readlink -v -f .) )"
+  else
+    echo "Error: Invalid args '$(echo "$@" | trim | cut -f2- -d' ')'" >&2
+    return 1
+  fi
+  if [ "$(expr length "$id")" != 36 ]; then
+    >&2 echo "Not a ria dataset location"
+    return 1
+  fi
+  ACTIVE_DS_BASE="$base"
+  ACTIVE_DS_ID="$id"
+  ACTIVE_DS_PATH="$base/$(id2relpath $id)"
+  ACTIVE_DS=1
+}
 
-echo "datastore:   $hp_path"
-echo "DATASET:     $ds_path"
-echo "DATASET_ID:  $ds_id"
+try_set_active_ds () {
+  set +e
+  set_active_ds $(parse_args "$@") 2>/dev/null
+  set -e
+}
+
+is_active () {
+  if [ -n "$ACTIVE_DS" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+get_active_ds () {
+  if ! is_active; then
+    >&2 echo "dataset not activated. First call 'set_active_ds'"
+    exit 1
+  fi
+  case "$1" in
+    path )
+      echo "$ACTIVE_DS_PATH"
+      ;;
+    base )
+      echo "$ACTIVE_DS_BASE"
+      ;;
+    id )
+      echo "$ACTIVE_DS_ID"
+      ;;
+    * )
+      >&2 echo "Invalid argument to 'get_active_ds': '$1'"
+      exit 1
+    esac
+}
+
+print_active_ds () {
+  >&2 echo "datastore:   $(get_active_ds base)"
+  >&2 echo "DATASET:     $(get_active_ds path)"
+  >&2 echo "DATASET_ID:  $(get_active_ds id)"
+}
+
+git_ds () {
+  git --git-dir $(get_active_ds path) "$@"
+}
+

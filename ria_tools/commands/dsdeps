@@ -1,6 +1,6 @@
 #!/bin/bash
-
-set -e -u
+set -Eeu
+source $lib/dsinfo
 
 HELP_TXT=$(cat <<EOF
 Print dataset IDs for each subdataset recorded in a dataset
@@ -10,17 +10,19 @@ non-zero exit code.
 EOF
 )
 
-source $lib/dsinfo
+set_active_ds $(parse_args "$@")
 
 error=0
-for dep in $($git_ds cat-file -p HEAD:.gitmodules | grep '^\sdatalad-id' | cut -d= -f2); do
-  dep_path="$hp_path/$(id2relpath "$dep")"
-  if [ ! -d "$dep_path" ]; then
-    >&2 echo "$dep" not available in "$hp_path"
-    error=1
-  else
-    echo "$dep"
-  fi
-done
+if git_ds cat-file -e HEAD:.gitmodules 2>/dev/null; then
+  for dep in $(git_ds cat-file -p HEAD:.gitmodules | grep '^\sdatalad-id' | cut -d= -f2); do
+    dep_path="$(get_active_ds base)/$(id2relpath "$dep")"
+    if [ ! -d "$dep_path" ]; then
+      >&2 echo "$dep" not available in "$(get_active_ds base)"
+      error=1
+    else
+      echo "$dep"
+    fi
+  done
+fi
 
 exit $error

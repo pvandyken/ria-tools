@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e -u
+set -Eeu
+source $lib/dsinfo
 
 HELP_TXT=$(cat <<EOF
 Copy or move annex objects into a 7z archive, accessible by ria-remote
@@ -12,25 +13,28 @@ copy - copy objects into to the archive, without deleting the originals
 EOF
 )
 
-if [ "$1" = "move" ]; then
+# from PATH, need not be executable
+
+params=$(parse_args "$@")
+
+action=$(get 1 "$params")
+if [ "$action" = "move" ]; then
   move=1
-elif [ "$1" = "copy" ]; then
+elif [ "$action" = "copy" ]; then
   move=0
 else
-  >&2 echo "First argument must be 'move' or 'copy'."
+  >&2 echo "First argument must be 'move' or 'copy'; got '$action'"
   exit 1
 fi
 # take off mode arg and find dataset with the rest
-shift
 
-# from PATH, need not be executable
-source $lib/dsinfo
+set_active_ds $(get 2- "$params")
 
 # uncompressed archive by default
 sevenzopts=${HP_ZIPOPTS:--mx0}
 
-objpath="$ds_path/annex/objects"
-archivepath="$ds_path/archives"
+objpath="$(get_active_ds path)/annex/objects"
+archivepath="$(get_active_ds path)/archives"
 
 if [ ! -d "$objpath" ]; then
   >&2 echo "No annex objects. Done."

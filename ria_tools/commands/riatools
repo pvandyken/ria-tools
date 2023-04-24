@@ -27,6 +27,8 @@ Tools for interacting with ria dataset storage
 archive - Move storage objects into a 7z archive
 gc - Dataset garbage collection
 deps - List the subdatasets of a given dataset
+last-updated - Print the timestamp and user id of the last dataset update
+ncommits - Print the number of commits in a dataset
 EOF
     ;;
 
@@ -48,6 +50,16 @@ EOF
   deps)
     shift
     $bin/dsdeps "$@"
+    ;;
+
+  last-updated)
+    shift
+    $bin/lastupdated "$@"
+    ;;
+
+  ncommits)
+    shift
+    $bin/ncommits "$@"
     ;;
 
   *)
