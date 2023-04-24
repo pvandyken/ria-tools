@@ -39,12 +39,7 @@ EOF
 
   gc)
     shift
-    if [ "$1" = "--all" ]; then
-      shift
-      $bin/gc_all "$@"
-    else
-      $bin/gc "$@"
-    fi
+    $bin/gc "$@"
     ;;
 
   deps)
