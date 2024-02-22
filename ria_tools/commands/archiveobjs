@@ -56,7 +56,9 @@ fi
 
 pushd "$objpath"
 # always update, also works from scratch
-chmod +w "$archivepath"/archive.7z
+if [[ -e "${archivepath}/archive.7z" ]]; then
+  chmod +w "$archivepath"/archive.7z
+fi
 7z u "$archivepath/archive.7z" . $sevenzopts
 chown -R --reference "$objpath" "$archivepath"/archive.7z
 chmod -w "$archivepath"/archive.7z
