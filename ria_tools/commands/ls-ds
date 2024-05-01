@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -Eeu
+source $lib/dsinfo
+
+HELP_TXT=$(cat <<EOF
+List all dataset IDs in a datastore
+EOF
+)
+
+store=$(get 1 "${@:-.}")
+
+find $store -mindepth 3 -maxdepth 3 -name ria-layout-version -not -path '**/alias/**' |
+  xargs -n1 dirname |
+  rev |
+  cut -d/ -f -2 |
+  rev |
+  sed 's|/||'
+

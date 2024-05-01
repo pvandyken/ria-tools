@@ -29,6 +29,7 @@ gc - Dataset garbage collection
 deps - List the subdatasets of a given dataset
 last-updated - Print the timestamp and user id of the last dataset update
 ncommits - Print the number of commits in a dataset
+ids - List the dataset ids
 EOF
     ;;
 
@@ -55,6 +56,11 @@ EOF
   ncommits)
     shift
     $bin/ncommits "$@"
+    ;;
+
+  ids)
+    shift
+    $bin/ls-ds "$@"
     ;;
 
   *)
