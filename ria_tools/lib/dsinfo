@@ -54,7 +54,7 @@ EOF
 }
 
 function length () {
-  echo $1 | wc -w
+  echo "$@" | wc -w
 }
 
 function get () {
@@ -100,12 +100,12 @@ set_active_ds () {
     fi
   }
   if [ $(length "$@") = 2 ]; then
-    arg=$(get 1 "$@")
+    arg=$(get 1 "$*")
     check_arg "$arg" || return 1
     base="$(readlink -v -f $arg)"
-    id="$(get 2 "$@"))"
+    id="$(get 2 "$*")"
   elif [ $(length "$@") = 1 ]; then
-    arg=$(get 1 "$@")
+    arg=$(get 1 "$*")
     check_arg "$arg" || return 1
     base="$(readlink -v -f "$arg/../..")"
     id="$(relpath2id $base $(readlink -v -f "$arg") )"
